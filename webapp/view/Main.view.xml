@@ -1,0 +1,59 @@
+<mvc:View controllerName="money.controller.Main"
+	xmlns="sap.ui.table"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns:u="sap.ui.unified"
+	xmlns:c="sap.ui.core"
+	xmlns:m="sap.m"
+    displayBlock="true">
+    <m:Page id="page" title="{i18n>title}">
+        <m:content>
+                <Table
+                rows="{dataModel>/}"
+                rowActionCount="1"
+                id="table"
+                selectionMode="Single"
+                paste="onPaste"
+                ariaLabelledBy="title">
+                <extension>
+                    <m:OverflowToolbar style="Clear">
+                        <m:Title id="title" text="가계부"/>
+                        <m:ToolbarSpacer></m:ToolbarSpacer>
+                        <m:Button text="생성" press=".onCreate" type="Emphasized"></m:Button>
+                        <m:Button text="삭제" press=".onDelete"></m:Button>
+                    </m:OverflowToolbar>
+                </extension>
+                <rowActionTemplate>
+                    <RowAction >
+                        <RowActionItem type="Navigation" press=".onMove"></RowActionItem>
+                    </RowAction>
+                </rowActionTemplate>
+                <columns>
+                    <Column width="11rem">
+                        <m:Label text="제목" />
+                        <template>
+                            <m:Input value="{dataModel>Title}"/>
+                        </template>
+                    </Column>
+                    <Column width="6rem" hAlign="End">
+                        <m:Label text="구분" />
+                        <template>
+                            <m:Label text="{dataModel>TypeText}" />
+                        </template>
+                    </Column>
+                    <Column width="9rem">
+                        <m:Label text="금액" />
+                        <template>
+                            <u:Currency stringValue="{dataModel>Amount}" currency="{dataModel/Unit}"/>
+                        </template>
+                    </Column>
+                    <Column width="11rem">
+                        <m:Label text="일자" />
+                        <template>
+                            <m:Text text="{path : 'dataModel>Createdat', formatter: '.dateFormatter', type: 'sap.ui.model.odata.type.String'}" wrapping="false" />
+                        </template>
+                    </Column>
+                </columns>
+            </Table>
+        </m:content>
+    </m:Page>
+</mvc:View>
