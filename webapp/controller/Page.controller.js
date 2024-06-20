@@ -184,7 +184,6 @@ sap.ui.define([
                         //     })
                         // }
 
-
                         // this._getODataUpdate(oMainModel, param, headData).done(function (aReturn) {
                         //     // 해당 _getODataUpdate 메서드는 BaseController에 정의된 메서드
 
@@ -200,46 +199,57 @@ sap.ui.define([
 
                         var parantsuuid;
                         var preUrl = "/Head";
-                        new Promise((resolve, reject) => {
-                            this._getODataRead(oMainModel, "/Head")
-                                .done(function (aGetData) {
-                                    console.log(aGetData);
-                        
-                                    aGetData.map(data => {
-                                        if (data.Yearmonth === headData.Yearmonth) {
-                                            parantsuuid = data.Uuid;
-                                            preUrl += "(guid'" + data.Uuid + "')/to_Item";
-                                        }
-                                    });
-                        
-                                    if (parantsuuid) {
-                                        let createPromises = itemData.map(item => {
-                                            item.Parantsuuid = parantsuuid;
-                                            return this._getODataCreate(oMainModel, preUrl, item);
-                                        });
-                        
-                                        Promise.all(createPromises)
-                                            .then(() => resolve())
-                                            .catch(err => reject(err));
-                                    } else {
-                                        headData.to_Item = itemData;
-                                        this._getODataCreate(oMainModel, preUrl, headData)
-                                            .done(() => resolve())
-                                            .fail(err => reject(err));
+                        var headData;
+
+                        // 첫 번째 작업: _getODataRead
+                        this._getODataRead(oMainModel, "/Head")
+                            .done(function (aGetData) {
+                                console.log(aGetData);
+
+                                aGetData.map(data => {
+                                    if (data.Yearmonth === headData.Yearmonth) {
+                                        headData = data;
+                                        parantsuuid = data.Uuid;
+                                        preUrl += "(guid'" + data.Uuid + "')/to_Item";
                                     }
-                        
-                                }.bind(this))
-                                .fail(() => {
-                                    reject();
                                 });
-                        })
-                        .then(() => {
-                            // 모든 작업이 완료된 후에 navTo 호출
-                            this.navTo("Main", {});
-                        })
-                        .catch(err => {
-                            console.error("Error in processing", err);
-                        });
+                            }.bind(this))
+                            .fail(function () {
+                                console.error('Failed to read data');
+                            }.bind(this))
+                            .always(function () {
+                                // 두 번째 작업: _getODataCreate (두 가지 분기)
+                                var createPromises;
+
+                                if (parantsuuid) {
+                                    createPromises = itemData.map(function (item) {
+                                        item.Parantsuuid = parantsuuid;
+                                        return this._getODataCreate(oMainModel, preUrl, item).done(function(){
+                                            this._getODataUpdate(oMainModel, "/Head(guid'" + data.Uuid + "')", headData)
+                                            .fail(
+                                                console.log('Failed to update head', err)
+                                            );
+                                        }.bind(this)).fail(function (err) {
+                                                console.error('Failed to create item', err);
+                                            });
+                                    }.bind(this));
+                                } else {
+                                    headData.to_Item = itemData;
+                                    createPromises = [this._getODataCreate(oMainModel, preUrl, headData)
+                                        .fail(function (err) {
+                                            console.error('Failed to create head with items', err);
+                                        })];
+                                }
+
+                                // 세 번째 작업: navTo
+                                Promise.all(createPromises)
+                                    .then(function () {
+                                        this.navTo("Main", {});
+                                    }.bind(this))
+                                    .catch(function (err) {
+                                        console.error('Failed to complete creation', err);
+                                    });
+                            }.bind(this));
                         // headData.to_Item = itemData;
                         // this._getODataCreate(oMainModel, "/Head", headData).done(function(aReturn){  
 
