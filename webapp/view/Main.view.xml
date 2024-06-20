@@ -10,8 +10,8 @@
                 <Table
                 rows="{dataModel>/}"
                 rowActionCount="1"
-                id="table"
-                selectionMode="Single"
+                id="headTable"
+                selectionMode="MultiToggle"
                 paste="onPaste"
                 ariaLabelledBy="title">
                 <extension>
@@ -28,28 +28,16 @@
                     </RowAction>
                 </rowActionTemplate>
                 <columns>
-                    <Column width="11rem">
-                        <m:Label text="제목" />
-                        <template>
-                            <m:Input value="{dataModel>Title}"/>
-                        </template>
-                    </Column>
                     <Column width="6rem" hAlign="End">
-                        <m:Label text="구분" />
+                        <m:Label text="년월" />
                         <template>
-                            <m:Label text="{dataModel>TypeText}" />
+                            <m:Label text="{dataModel>Yearmonth}" />
                         </template>
                     </Column>
                     <Column width="9rem">
-                        <m:Label text="금액" />
+                        <m:Label text="합계" />
                         <template>
-                            <u:Currency stringValue="{dataModel>Amount}" currency="{dataModel/Unit}"/>
-                        </template>
-                    </Column>
-                    <Column width="11rem">
-                        <m:Label text="일자" />
-                        <template>
-                            <m:Text text="{path : 'dataModel>Createdat', formatter: '.dateFormatter', type: 'sap.ui.model.odata.type.String'}" wrapping="false" />
+                            <u:Currency stringValue="{dataModel>Amountsum}" currency="{dataModel/Unit}"/>
                         </template>
                     </Column>
                 </columns>

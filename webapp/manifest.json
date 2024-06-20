@@ -17,7 +17,7 @@
     },
     "dataSources": {
       "mainService": {
-        "uri": "/sap/opu/odata/sap/YAPI_MONEY_LJH_O2/",
+        "uri": "/sap/opu/odata/sap/YAPI_MONTH_LJH_O2/",
         "type": "OData",
         "settings": {
           "annotations": [],

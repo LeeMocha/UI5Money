@@ -1,0 +1,35 @@
+<core:FragmentDefinition
+    xmlns:core="sap.ui.core"
+    xmlns:mvc="sap.ui.core.mvc"
+    xmlns:m="sap.m"
+    xmlns:u="sap.ui.unified"
+    xmlns:layout="sap.ui.layout"
+    xmlns:uxap="sap.uxap"
+    xmlns:f="sap.ui.layout.form"
+  height="100%">
+    <m:VBox>
+         <f:SimpleForm id="InsuranceEdit"
+			editable="true"
+			layout="ColumnLayout"
+			columnsM="2"
+			columnsL="3"
+			columnsXL="4"
+			>
+			<f:content>
+				<core:Title text="가계부" />
+				<m:Label text="년월" />
+                <m:DatePicker
+					id="DP10"
+					value="{
+						'path': 'headModel>/dateVar',
+						'type': 'sap.ui.model.type.Date',
+						'formatOptions': {
+							'pattern': 'yMM'
+						}
+					}"
+					change="handleChange"
+					class="sapUiSmallMarginBottom"/>
+			</f:content>
+		</f:SimpleForm>
+    </m:VBox>
+</core:FragmentDefinition>

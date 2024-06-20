@@ -22,7 +22,7 @@ function (Controller, JSONModel) {
 
             var oMainModel = this.getOwnerComponent().getModel();
 
-            this._getODataRead(oMainModel, "/Money").done(function(aGetData){
+            this._getODataRead(oMainModel, "/Head").done(function(aGetData){
 
                 console.log(aGetData);
 
@@ -56,24 +56,28 @@ function (Controller, JSONModel) {
         },
 
         onDelete : function(oEvent){
-
+            var oTable = this.byId("headTable"); // 테이블 ID로 테이블을 찾습니다.
             var oMainModel = this.getOwnerComponent().getModel();
-            var index = this.byId('table').getSelectedIndex();
-            var getData = this.getModel("dataModel").getData();
-            var oRowData = getData[index];
+            var aSelectedIndices = oTable.getSelectedIndices(); // 선택된 인덱스를 가져옵니다.
+            var aSelectedItems = [];
 
-            var param = "/Money(guid'" + oRowData.Uuid + "')";
-            
-            this._getODataDelete(oMainModel, param).done(function(aReturn){
-
-                this._getData();
-
-            }.bind(this)).fail(function(){
-                // chk = false;
-            }).always(function(){
-
+            aSelectedIndices.forEach(function(index) {
+                var oContext = oTable.getContextByIndex(index);
+                var oData = oContext.getObject();
+                aSelectedItems.push(oData);
             });
 
+            aSelectedItems.map(item => {
+                var itemUri = item.__metadata.uri.substring(item.__metadata.uri.indexOf("/Head("));
+                this._getODataDelete(oMainModel, itemUri).done(function(aReturn){
+
+                }.bind(this)).fail(()=>{
+                    MessageBox.information("Delete Fail");
+                }).always(()=>{
+
+                })
+            })
+            this._getData();
         }
 
     });
