@@ -200,38 +200,46 @@ sap.ui.define([
 
                         var parantsuuid;
                         var preUrl = "/Head";
-                        this._getODataRead(oMainModel, "/Head").done(function (aGetData) {
-                            console.log(aGetData)
-
-                            aGetData.map(data => {
-                                if (data.Yearmonth === headData.Yearmonth) {
-                                    parantsuuid = data.Uuid;
-                                    preUrl += "(guid'" + data.Uuid + "')/to_Item";
-                                }
-                            })
-
-                            if (parantsuuid) {
-                                itemData.map(item => {
-                                    item.Parantsuuid = parantsuuid;
-                                    this._getODataCreate(oMainModel, preUrl, item).done(function (aReturn) {
-                                    }.bind(this)).fail(function (err) {
-                                    }).always(function () {
-                                    });
-                                })
-                            } else {
-                                headData.to_Item = itemData;
-                                this._getODataCreate(oMainModel, preUrl, headData).done(function (aReturn) {
-                                }.bind(this)).fail(function (err) {
-                                }).always(function () {
-                                });
-                            }
-
-                        }.bind(this)).fail(() => {
-
-                        }).always( () => {
-                        })
+                        new Promise((resolve, reject) => {
+                            this._getODataRead(oMainModel, "/Head")
+                                .done(function (aGetData) {
+                                    console.log(aGetData);
                         
-                        this.navTo("Main", {});
+                                    aGetData.map(data => {
+                                        if (data.Yearmonth === headData.Yearmonth) {
+                                            parantsuuid = data.Uuid;
+                                            preUrl += "(guid'" + data.Uuid + "')/to_Item";
+                                        }
+                                    });
+                        
+                                    if (parantsuuid) {
+                                        let createPromises = itemData.map(item => {
+                                            item.Parantsuuid = parantsuuid;
+                                            return this._getODataCreate(oMainModel, preUrl, item);
+                                        });
+                        
+                                        Promise.all(createPromises)
+                                            .then(() => resolve())
+                                            .catch(err => reject(err));
+                                    } else {
+                                        headData.to_Item = itemData;
+                                        this._getODataCreate(oMainModel, preUrl, headData)
+                                            .done(() => resolve())
+                                            .fail(err => reject(err));
+                                    }
+                        
+                                }.bind(this))
+                                .fail(() => {
+                                    reject();
+                                });
+                        })
+                        .then(() => {
+                            // 모든 작업이 완료된 후에 navTo 호출
+                            this.navTo("Main", {});
+                        })
+                        .catch(err => {
+                            console.error("Error in processing", err);
+                        });
                         // headData.to_Item = itemData;
                         // this._getODataCreate(oMainModel, "/Head", headData).done(function(aReturn){  
 
