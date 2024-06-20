@@ -142,12 +142,11 @@ sap.ui.define([
 
                         }.bind(this)).fail(function () {
                             // chk = false;
-                        }).always(function () {
-
+                        }).always(() => {
                         });
-
+                        
                         this.navTo("Main", {});
-
+                        
                     } else { // 신규
                         console.log('신규');
 
@@ -181,11 +180,10 @@ sap.ui.define([
 
                         }.bind(this)).fail(() => {
 
-                        }).always(() => { })
-
-
+                        }).always( () => {
+                        })
+                        
                         this.navTo("Main", {});
-
                         // headData.to_Item = itemData;
                         // this._getODataCreate(oMainModel, "/Head", headData).done(function(aReturn){  
 
