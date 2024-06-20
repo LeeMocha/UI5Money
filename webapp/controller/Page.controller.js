@@ -103,50 +103,98 @@ sap.ui.define([
 
                         console.log(itemData)
                         console.log(param)
-                        this._getODataUpdate(oMainModel, param, headData).done(function (aReturn) {
-                            // 해당 _getODataUpdate 메서드는 BaseController에 정의된 메서드
 
-                            itemData.map(item => {
-                                if (item.Uuid) {
-                                    // 기존 Head에 기존 Item의 수정
-                                    var itemUri = item.__metadata.uri.substring(item.__metadata.uri.indexOf("/Item("));
-                                    this._getODataUpdate(oMainModel, itemUri, item).done(function (aReturn) {
-                                    }.bind(this)).fail(function (err) {
-                                    }).always(function () {
-                                    });
-                                } else {
-                                    // 기존 Head에 신규 생성된 Item 들
-                                    item.Parantsuuid = headData.Uuid;
-                                    var createUri = param + "/to_Item";
-                                    this._getODataCreate(oMainModel, createUri, item).done(function (aReturn) {
-                                    }.bind(this)).fail(function (err) {
-                                    }).always(function () {
-                                    });
-                                }
-                            })
+                        // 전체 비동기 작업을 담을 배열
+                        let promises = [];
 
-                            // 모델에서 삭제된 데이터 데이터베이스에 반영
-                            if(this.deSelectedItem && this.deSelectedItem.length > 0){
-                                this.deSelectedItem.map( item => {
-                                    console.log(item)
-                                    var itemUri = item.__metadata.uri.substring(item.__metadata.uri.indexOf("/Item("));
-                                    this._getODataDelete(oMainModel, itemUri).done(function (aReturn) {
-                
-                                    }.bind(this)).fail(() => {
-                                        MessageBox.information("Delete Fail");
-                                    }).always(() => {
-                                        this.deSelectedItem = [];
-                                    })
-                                })
+                        // itemData.map 내에서 각 작업을 promises 배열에 추가
+                        itemData.map(item => {
+                            if (item.Uuid) {
+                                // 기존 Head에 기존 Item의 수정
+                                var itemUri = item.__metadata.uri.substring(item.__metadata.uri.indexOf("/Item("));
+                                let updatePromise = this._getODataUpdate(oMainModel, itemUri, item);
+                                promises.push(updatePromise);
+                            } else {
+                                // 기존 Head에 신규 생성된 Item 들
+                                item.Parantsuuid = headData.Uuid;
+                                var createUri = param + "/to_Item";
+                                let createPromise = this._getODataCreate(oMainModel, createUri, item);
+                                promises.push(createPromise);
                             }
-
-                        }.bind(this)).fail(function () {
-                            // chk = false;
-                        }).always(() => {
                         });
+
+                        // 모델에서 삭제된 데이터 데이터베이스에 반영
+                        if (this.deSelectedItem && this.deSelectedItem.length > 0) {
+                            this.deSelectedItem.map(item => {
+                                console.log(item);
+                                var itemUri = item.__metadata.uri.substring(item.__metadata.uri.indexOf("/Item("));
+                                let deletePromise = this._getODataDelete(oMainModel, itemUri).done(function (aReturn) {
+
+                                }.bind(this)).fail(() => {
+                                    MessageBox.information("Delete Fail");
+                                }).always(() => {
+                                    this.deSelectedItem = [];
+                                });
+                                promises.push(deletePromise);
+                            });
+                        }
+
+                        // 모든 비동기 작업이 완료된 후에 마지막 업데이트 요청 보내기
+                        Promise.all(promises).then(() => {
+                            return this._getODataUpdate(oMainModel, param, headData);
+                        }).then(function (aReturn) {
+                            // 최종 업데이트 후 처리
+                            this.navTo("Main", {});
+                        }.bind(this)).catch(function (err) {
+                            // 에러 처리
+                            console.error("Error in processing", err);
+                        });
+
+                        // itemData.map(item => {
+                        //     if (item.Uuid) {
+                        //         // 기존 Head에 기존 Item의 수정
+                        //         var itemUri = item.__metadata.uri.substring(item.__metadata.uri.indexOf("/Item("));
+                        //         this._getODataUpdate(oMainModel, itemUri, item).done(function (aReturn) {
+                        //         }.bind(this)).fail(function (err) {
+                        //         }).always(function () {
+                        //         });
+                        //     } else {
+                        //         // 기존 Head에 신규 생성된 Item 들
+                        //         item.Parantsuuid = headData.Uuid;
+                        //         var createUri = param + "/to_Item";
+                        //         this._getODataCreate(oMainModel, createUri, item).done(function (aReturn) {
+                        //         }.bind(this)).fail(function (err) {
+                        //         }).always(function () {
+                        //         });
+                        //     }
+                        // })
+
+                        // // 모델에서 삭제된 데이터 데이터베이스에 반영
+                        // if(this.deSelectedItem && this.deSelectedItem.length > 0){
+                        //     this.deSelectedItem.map( item => {
+                        //         console.log(item)
+                        //         var itemUri = item.__metadata.uri.substring(item.__metadata.uri.indexOf("/Item("));
+                        //         this._getODataDelete(oMainModel, itemUri).done(function (aReturn) {
+            
+                        //         }.bind(this)).fail(() => {
+                        //             MessageBox.information("Delete Fail");
+                        //         }).always(() => {
+                        //             this.deSelectedItem = [];
+                        //         })
+                        //     })
+                        // }
+
+
+                        // this._getODataUpdate(oMainModel, param, headData).done(function (aReturn) {
+                        //     // 해당 _getODataUpdate 메서드는 BaseController에 정의된 메서드
+
+                        // }.bind(this)).fail(function () {
+                        //     // chk = false;
+                        // }).always(() => {
+                        // });
                         
-                        this.navTo("Main", {});
-                        
+                        // this.navTo("Main", {});
+
                     } else { // 신규
                         console.log('신규');
 
