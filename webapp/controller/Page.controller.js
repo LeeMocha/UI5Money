@@ -201,6 +201,8 @@ sap.ui.define([
                         var preUrl = "/Head";
                         var headData;
 
+                        let createPromises = [];
+
                         // 첫 번째 작업: _getODataRead
                         this._getODataRead(oMainModel, "/Head")
                             .done(function (aGetData) {
@@ -219,26 +221,24 @@ sap.ui.define([
                             }.bind(this))
                             .always(function () {
                                 // 두 번째 작업: _getODataCreate (두 가지 분기)
-                                var createPromises;
 
                                 if (parantsuuid) {
-                                    createPromises = itemData.map(function (item) {
+                                    itemData.map(item => {
                                         item.Parantsuuid = parantsuuid;
-                                        return this._getODataCreate(oMainModel, preUrl, item).done(function(){
-                                            this._getODataUpdate(oMainModel, "/Head(guid'" + data.Uuid + "')", headData)
-                                            .fail(
-                                                console.log('Failed to update head', err)
-                                            );
+                                        let promise1 = this._getODataCreate(oMainModel, preUrl, item).done(function(){
+                                            
                                         }.bind(this)).fail(function (err) {
-                                                console.error('Failed to create item', err);
-                                            });
-                                    }.bind(this));
+                                            console.error('Failed to create item', err);
+                                        });
+                                        createPromises.push(promise1)
+                                    });
                                 } else {
                                     headData.to_Item = itemData;
-                                    createPromises = [this._getODataCreate(oMainModel, preUrl, headData)
+                                    let promise2 = this._getODataCreate(oMainModel, preUrl, headData)
                                         .fail(function (err) {
                                             console.error('Failed to create head with items', err);
-                                        })];
+                                        });
+                                    createPromises.push(promise2)
                                 }
 
                                 // 세 번째 작업: navTo
